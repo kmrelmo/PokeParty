@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guess from ID</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin-top: 40px;
+      background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .correct {
+      color: #065f46;
+    }
+    .wrong {
+      color: #991b1b;
+    }
+    #sprite {
+      margin-top: 20px;
+      display: none;
+    }
+    #sprite img {
+      width: 200px;
+      height: 200px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #f97316, #facc15);
+      color: #fff;
+      font-weight: 600;
+    }
+    button:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+    .home-btn {
+      background: #374151;
+      color: #fff;
+    }
+    .home-btn:hover {
+      background: #1f2937;
+    }
+    .play-btn {
+      background: #2563eb;
+    }
+    .play-btn:hover {
+      background: #1e40af;
+    }
+  </style>
+</head>
+<body>
+  <h1>Guess the Pokémon!</h1>
+  <p>The Pokémon ID is: <strong>{{ id }}</strong></p>
+
+  <input type="text" id="guessInput" placeholder="Enter Pokémon name...">
+  <br>
+  <button id="submitBtn" onclick="submitGuess()">Submit Guess</button>
+
+  <div id="feedback"></div>
+
+  <div id="sprite">
+    <h3 id="spriteTitle"></h3>
+    <img src="{{ sprite_url }}" alt="pokemon sprite">
+  </div>
+
+  <!-- Navigation buttons -->
+  <div style="margin-top: 30px;">
+    <form action="/game/guessfromid" method="get" style="display:inline;">
+      <button type="submit" class="play-btn">🔄 Play Again</button>
+    </form>
+    <form action="/" method="get" style="display:inline;">
+      <button type="submit" class="home-btn">⬅ Back to Home</button>
+    </form>
+  </div>
+
+  <script>
+    const correctName = "{{ name.lower() }}";
+    let guessed = false;
+
+    function submitGuess() {
+      if (guessed) return; // only one guess allowed
+      guessed = true;
+
+      const userGuess = document.getElementById("guessInput").value.toLowerCase().trim();
+      const feedback = document.getElementById("feedback");
+      const spriteDiv = document.getElementById("sprite");
+      const spriteTitle = document.getElementById("spriteTitle");
+
+      if (userGuess === correctName) {
+        feedback.textContent = "✅ Correct!";
+        feedback.className = "correct";
+        spriteTitle.textContent = `It was ${correctName}!`;
+      } else {
+        feedback.textContent = "❌ Wrong!";
+        feedback.className = "wrong";
+        spriteTitle.textContent = `It was ${correctName}!`;
+      }
+
+      spriteDiv.style.display = "block";
+
+      // lock input + button
+      document.getElementById("guessInput").disabled = true;
+      document.getElementById("submitBtn").disabled = true;
+    }
+
+    // Allow Enter key
+    document.getElementById("guessInput").addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && !guessed) {
+        event.preventDefault();
+        submitGuess();
+      }
+    });
+  </script>
+</body>
+</html>

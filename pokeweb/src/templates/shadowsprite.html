@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shadow Sprite Guess</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        #poke-img {
+            height: 200px;
+            filter: brightness(0) contrast(200%); /* silhouette effect initially */
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 250px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        #actions {
+            margin-top: 30px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Who's That Pokémon?</h1>
+
+    <!-- Only one image now -->
+    <img id="poke-img" src="{{ sprite_url }}" alt="shadow sprite">
+
+    <div>
+        <input type="text" id="guessInput" placeholder="Your guess...">
+        <button onclick="submitGuess()">Guess (Enter)</button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div id="result">
+        <h2>It was {{ name | capitalize }}!</h2>
+    </div>
+
+    <div id="actions">
+        <button onclick="location.href='/game/shadowsprite'">Play Again (r)</button>
+        <button onclick="location.href='/'">Back to Home (e)</button>
+    </div>
+
+    <script>
+        const correctName = "{{ name.lower() }}";
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        function submitGuess() {
+            const guess = document.getElementById("guessInput").value.toLowerCase().trim();
+            attempts++;
+
+            if (guess === correctName) {
+                document.getElementById("feedback").textContent = "Correct! 🎉";
+                revealPokemon();
+            } else if (attempts >= maxAttempts) {
+                document.getElementById("feedback").textContent = `Out of guesses! The answer was ${correctName}.`;
+                revealPokemon();
+            } else {
+                document.getElementById("feedback").textContent = `Nope! ${maxAttempts - attempts} guesses left.`;
+            }
+        }
+
+        function revealPokemon() {
+            document.getElementById("poke-img").style.filter = "none"; // remove silhouette
+            document.getElementById("result").style.display = "block";
+            document.getElementById("actions").style.display = "block";
+            document.getElementById("guessInput").disabled = true;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", function(event) {
+            const key = event.key.toLowerCase();
+            if (key === "enter" && !document.getElementById("guessInput").disabled) {
+                submitGuess();
+            }
+            if ((key === "r" || key === "e") && document.getElementById("guessInput").disabled) {
+                if (key === "r") location.href = "/game/shadowsprite";
+                if (key === "e") location.href = "/";
+            }
+        });
+    </script>
+
+</body>
+</html>
+

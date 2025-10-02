@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pokémon Rankings</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f9fafb, #eef2f7);
+      padding: 20px;
+      color: #1f2937;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.2rem;
+      background: linear-gradient(90deg, #facc15, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 15px;
+      text-align: center;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+    .card img {
+      width: 96px;
+      height: 96px;
+    }
+    .name {
+      font-weight: bold;
+      margin-top: 8px;
+      font-size: 1rem;
+    }
+    .id {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    .score {
+      margin-top: 8px;
+      font-weight: 600;
+      color: #2563eb;
+    }
+    .no-score {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .nav a {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: #374151;
+      color: white;
+      font-weight: 600;
+    }
+    .nav a:hover {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pokémon Rankings</h1>
+
+  <div class="grid">
+    {% for p in pokemon_list %}
+      <div class="card" onclick="ratePokemon('{{ p.name }}', this)">
+        <img src="{{ p.sprite_url }}" alt="{{ p.name }}">
+        <div class="name">{{ p.name.title() }}</div>
+        <div class="id">#{{ p.id }}</div>
+        {% if p.score %}
+          <div class="score">Score: {{ p.score }}</div>
+        {% else %}
+          <div class="no-score">Not ranked yet</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="nav">
+    <a href="/">⬅ Back to Home</a>
+  </div>
+
+  <script>
+    async function ratePokemon(name, cardEl) {
+      const newScore = prompt(`Enter a score (1–1000) for ${name}:`);
+      if (!newScore) return;
+
+      // send update to backend
+      const resp = await fetch("/update_score", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({name: name, score: newScore})
+      });
+
+      const result = await resp.json();
+      if (result.success) {
+        // update UI inside the clicked card
+        let scoreEl = cardEl.querySelector(".score, .no-score");
+        if (scoreEl) {
+          scoreEl.className = "score";
+          scoreEl.textContent = "Score: " + result.score;
+        }
+      }
+    }
+  </script>
+</body>
+</html>

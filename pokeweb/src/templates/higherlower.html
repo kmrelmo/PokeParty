@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pokémon Higher or Lower</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+    h1 { font-size: 2rem; margin-bottom: 20px; }
+    .result {
+      margin-bottom: 20px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .correct {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+    .wrong {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+    .container { display: flex; gap: 40px; }
+    .card {
+      background: #fff; border-radius: 12px; padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 220px;
+    }
+    .card img { width: 120px; height: 120px; }
+    .stats { font-size: 0.95rem; margin: 6px 0; }
+    .btn {
+      margin-top: 10px; padding: 10px 16px;
+      border: none; border-radius: 8px; cursor: pointer;
+      background: linear-gradient(90deg, #f97316, #facc15);
+      color: #fff; font-weight: 600;
+    }
+    .home-btn {
+      margin-top: 30px;
+      padding: 12px 20px;
+      border: none; border-radius: 8px; cursor: pointer;
+      background: #374151; color: #fff; font-weight: 600;
+    }
+    .home-btn:hover {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <h1>Which Pokémon has higher <u>{{ stat_choice }}</u>?</h1>
+
+  {% if result %}
+    <div class="result {% if 'Correct' in result %}correct{% else %}wrong{% endif %}">
+      {{ result }}
+    </div>
+  {% endif %}
+
+  <div class="container">
+    <!-- Left -->
+    <div class="card">
+      <img src="{{ sprite_url2 }}" alt="{{ name2 }}">
+      <h2>{{ name2 }}</h2>
+      <p class="stats">{{ stat_choice|capitalize }}: {{ stats2[stat_choice] }}</p>
+      <form method="post">
+        <button class="btn" name="choice" value="left">Choose Left</button>
+      </form>
+    </div>
+
+    <!-- Right -->
+    <div class="card">
+      <img src="{{ sprite_url }}" alt="{{ name }}">
+      <h2>{{ name }}</h2>
+      <p class="stats">{{ stat_choice|capitalize }}: ???</p>
+      <form method="post">
+        <button class="btn" name="choice" value="right">Choose Right</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Back to Home button -->
+  <form action="/" method="get">
+    <button type="submit" class="home-btn">⬅ Back to Home</button>
+  </form>
+</body>
+</html>

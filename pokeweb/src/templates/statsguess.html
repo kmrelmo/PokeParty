@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guess the Pokémon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 250px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            font-weight: bold;
+            color: rgb(0, 0, 0);
+        }
+
+        #clue {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        #result img {
+            height: 200px;
+        }
+
+        #actions {
+            margin-top: 30px;
+        }
+
+        ul.clue-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul.clue-list li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Guess the Pokémon</h1>
+    <div id="clue">
+        <!-- All clues will stack here -->
+    </div>
+
+    <input type="text" id="guessInput" placeholder="Your guess...">
+    <br>
+    <button onclick="submitGuess()">Submit Guess</button>
+
+    <div id="feedback"></div>
+
+    <div id="result">
+        <h2>The Pokémon was: {{ name | capitalize }}</h2>
+        <img src="{{ sprite }}" alt="pokemon">
+    </div>
+
+    <div id="actions" style="display: none;">
+        <button onclick="window.location.href='/game/statsguess'">Restart (r)</button>
+        <button onclick="window.location.href='/'">Back to Home (e)</button>
+    </div>
+
+    <script>
+        const correctName = "{{ name.lower() }}";
+        let attempts = 0;
+        const maxAttempts = 6;  // because you have 6 clues before revealing
+        let clueIndex = 0;
+        const clues = {{ clues | tojson }};
+
+        function showClue() {
+            const clueArea = document.getElementById("clue");
+            const clue = clues[clueIndex];
+            if (!clue) return;
+
+            const clueDiv = document.createElement("div");
+
+            if (clue.type === "stats") {
+                const ul = document.createElement("ul");
+                ul.className = "clue-list";
+                for (const [stat, val] of Object.entries(clue.value)) {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<strong>${stat}:</strong> ${val}`;
+                    ul.appendChild(li);
+                }
+                clueDiv.appendChild(ul);
+            } else if (clue.type === "types") {
+                clueDiv.innerText = `Type(s): ${clue.value.join(", ")}`;
+            } else if (clue.type === "height" || clue.type === "weight") {
+                clueDiv.innerText = `${clue.type.charAt(0).toUpperCase() + clue.type.slice(1)}: ${clue.value}`;
+            } else if (clue.type === "generation") {
+                clueDiv.innerText = `Generation: ${clue.value}`;
+            } else if (clue.type === "desc") {
+                clueDiv.innerText = `Description: ${clue.value}`;
+            }
+
+            // ✅ Append new clue instead of replacing
+            clueArea.appendChild(clueDiv);
+        }
+
+        function submitGuess() {
+            const userGuess = document.getElementById("guessInput").value.toLowerCase().trim();
+            attempts++;
+
+            if (userGuess === correctName) {
+                document.getElementById("feedback").textContent = "Correct! 🎉";
+                endGame(true);
+            } else if (attempts > maxAttempts) {
+                document.getElementById("feedback").textContent =
+                    `Out of guesses! The answer was ${correctName}.`;
+                endGame(false);
+            } else {
+                document.getElementById("feedback").textContent =
+                    `Wrong! ${maxAttempts - attempts + 1} guesses left.`;
+                clueIndex++;
+                showClue();
+            }
+        }
+
+        function endGame(won) {
+            document.getElementById("result").style.display = "block";
+            document.getElementById("actions").style.display = "block";
+            document.getElementById("guessInput").disabled = true;
+        }
+
+        // Setup enter key and shortcut keys
+        document.addEventListener("keydown", function(event) {
+            const key = event.key.toLowerCase();
+            if (key === "enter" && !document.getElementById("guessInput").disabled) {
+                event.preventDefault();
+                submitGuess();
+            }
+            if ((key === "r" || key === "e") && document.getElementById("guessInput").disabled) {
+                if (key === "r") {
+                    location.href = "/game/statsguess";
+                }
+                if (key === "e") {
+                    location.href = "/";
+                }
+            }
+        });
+
+        // Initialize by showing first clue
+        showClue();
+    </script>
+
+</body>
+</html>

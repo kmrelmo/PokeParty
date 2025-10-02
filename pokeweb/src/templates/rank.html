@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokémon Blink Rank</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        #ranking {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 150px;
+        }
+
+        .rank-slot {
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+
+        .rank-slot img {
+            height: 80px;
+        }
+
+        .rank-number {
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            font-weight: bold;
+            color: #888;
+        }
+
+        #game-view {
+            text-align: center;
+        }
+
+        #poke-img {
+            height: 200px;
+            cursor: grab;
+        }
+
+        #summary {
+            display: none;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Panel: Ranking Slots -->
+    <div id="ranking">
+        {% for i in range(1, 8) %}
+        <div class="rank-slot" id="rank-{{ i }}" ondragover="allowDrop(event)" ondrop="drop(event, {{ i }})">
+            <div class="rank-number">{{ i }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Center: Current Pokémon -->
+    <div id="game-view">
+        <h2 id="poke-name"></h2>
+        <img id="poke-img" src="" alt="pokemon" draggable="true" ondragstart="drag(event)">
+        <p>Drag the Pokémon into a ranking slot</p>
+    </div>
+
+    <!-- Summary View -->
+    <div id="summary">
+        <h2>All Pokémon Ranked!</h2>
+        <p>Thanks for playing!</p>
+        <button onclick="location.href='/'">Back to Home (e)</button>
+        <button onclick="location.href='/game/rank'">Play Again (r)</button>
+    </div>
+
+    <script>
+        const pokemonList = {{ pokemon_list | tojson }};
+        let currentIndex = 0;
+        const usedRanks = new Set();
+
+        function showPokemon() {
+            const poke = pokemonList[currentIndex];
+            document.getElementById('poke-name').innerText = poke.name;
+            document.getElementById('poke-img').src = poke.sprite;
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", currentIndex); // store current Pokémon index
+        }
+
+        function drop(ev, rank) {
+            ev.preventDefault();
+
+            if (usedRanks.has(rank)) {
+                return; // do nothing if already filled
+            }
+
+            const idx = ev.dataTransfer.getData("text");
+            const poke = pokemonList[idx];
+
+            const slot = document.getElementById(`rank-${rank}`);
+            slot.innerHTML = `<div class="rank-number">${rank}</div><img src="${poke.sprite}" title="${poke.name}">`;
+
+            usedRanks.add(rank);
+            currentIndex++;
+
+            if (currentIndex < pokemonList.length) {
+                showPokemon();
+            } else {
+                document.getElementById('game-view').style.display = 'none';
+                document.getElementById('summary').style.display = 'block';
+            }
+        }
+
+        // Keyboard shortcuts for replay/home
+        document.addEventListener('keydown', function(event) {
+            const key = event.key.toLowerCase();
+            if (key === 'e' && currentIndex >= pokemonList.length) {
+                location.href = '/';
+            }
+            if (key === 'r' && currentIndex >= pokemonList.length) {
+                location.href = '/game/rank';
+            }
+        });
+
+        showPokemon();
+    </script>
+
+</body>
+</html>

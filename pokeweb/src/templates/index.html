@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PokéParty</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f9fafb, #eef2f7);
+      color: #1f2937;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #facc15, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 15px;
+      color: #374151;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 30px 25px;
+      margin: 20px 0;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    input[type="text"] {
+      padding: 12px 14px;
+      font-size: 1rem;
+      width: 70%;
+      max-width: 260px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(90deg, #f97316, #facc15);
+      color: #fff;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .options {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .options label {
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #374151;
+    }
+
+    .options input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #f97316;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>PokéParty</h1>
+
+  <div class="card">
+    <p><strong>Search for a Pokémon</strong></p>
+    <input type="text" id="pokemonName" placeholder="e.g. Pikachu">
+    <br>
+    <button onclick="goToPokemon()">🔍 View Pokémon</button>
+  </div>
+
+  <div class="card">
+    <p><strong>Blindly rank 7 random Pokémon!</strong></p>
+    <form action="/game/rank" method="get">
+      <div class="options">
+        <label>
+          <input type="checkbox" name="shiny">
+          Shiny ✨
+        </label>
+      </div>
+      <button type="submit">Start Blind Rank</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <p><strong>Guess the Pokémon from base stats!</strong></p>
+    <a href="/game/statsguess"><button>Start Stats Guess</button></a>
+  </div>
+
+  <div class="card">
+    <p><strong>Guess the Pokémon from the shadow!</strong></p>
+    <a href="/game/shadowsprite"><button>Start Shadow Guess</button></a>
+  </div>
+
+  <div class="card">
+    <p><strong>Guess the Pokémon with the higher base stat!</strong></p>
+    <a href="/game/higherlower"><button>Start Stat HighLow</button></a>
+  </div>
+
+  <div class="card">
+    <p><strong>Guess the Pokémon from its dex number!</strong></p>
+    <a href="/game/guessfromid"><button>Start Dex Guess</button></a>
+  </div>
+
+  <div class="card">
+    <p><strong>Rank a random Pokemon!</strong></p>
+    <a href="/game/rankrandom"><button>Rank a Pokemon!</button></a>
+  </div>
+
+    <div class="card">
+    <p><strong>View Rankings</strong></p>
+    <a href="/rankings"><button>See your Pokemon Rankings!</button></a>
+  </div>
+
+    <div class="card">
+    <p><strong>View Favorites</strong></p>
+    <a href="/leaderboard"><button>See your favorite Pokemon!</button></a>
+  </div>
+
+  <script>
+    function goToPokemon() {
+      const name = document.getElementById('pokemonName').value;
+      if (name) {
+        window.location.href = `/pokemon/${name.toLowerCase()}`;
+      }
+    }
+  </script>
+</body>
+</html>
+
+

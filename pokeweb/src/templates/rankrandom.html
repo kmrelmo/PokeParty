@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rank Random Pokémon</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin-top: 40px;
+      background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    .feedback {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    img {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 15px;
+    }
+    input[type="number"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 80px;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #f97316, #facc15);
+      color: #fff;
+      font-weight: 600;
+    }
+    .nav-buttons {
+      margin-top: 30px;
+    }
+    .nav-buttons button {
+      margin: 5px;
+      background: #374151;
+    }
+    .nav-buttons button:hover {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <h1>Rank This Pokémon</h1>
+  <img src="{{ sprite_url }}" alt="{{ name }}">
+  <p><strong>{{ name.title() }}</strong></p>
+
+  {% if rank %}
+    <p>Previously ranked: {{ rank }}</p>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="name" value="{{ name }}">
+    <input type="hidden" name="sprite_url" value="{{ sprite_url }}">
+    <label for="score">Your Score (1–1000):</label>
+    <input type="number" id="score" name="score" min="1" max="1000" required>
+    <br>
+    <button type="submit">Submit Score</button>
+  </form>
+
+  {% if result %}
+    <div class="feedback">{{ result }}</div>
+  {% endif %}
+
+  <div class="nav-buttons">
+    <form action="/game/rankrandom" method="get" style="display:inline;">
+      <button type="submit">🔄 New Pokémon</button>
+    </form>
+    <form action="/" method="get" style="display:inline;">
+      <button type="submit">⬅ Back to Home</button>
+    </form>
+  </div>
+</body>
+</html>
