@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PokéParty Leaderboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f9fafb, #eef2f7);
+      padding: 30px;
+      color: #1f2937;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #facc15, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    table {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 14px 18px;
+      text-align: left;
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: 700;
+      color: #111827;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    tr:hover {
+      background: #fff7ed;
+    }
+    img {
+      width: 60px;
+      height: 60px;
+      vertical-align: middle;
+    }
+    .score {
+      font-weight: bold;
+      color: #2563eb;
+    }
+    .username {
+      color: #374151;
+      font-style: italic;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .nav a {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      background: #374151;
+      color: white;
+      font-weight: 600;
+    }
+    .nav a:hover {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pokémon Leaderboard</h1>
+
+  {% if leaderboard %}
+  <table>
+    <tr>
+      <th>Rank</th>
+      <th>Pokémon</th>
+      <th>Sprite</th>
+      <th>Score</th>
+      <th>User</th>
+    </tr>
+    {% for entry in leaderboard %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ entry.pokemon.title() }}</td>
+      <td><img src="{{ entry.sprite_url }}" alt="{{ entry.pokemon }}"></td>
+      <td class="score">{{ entry.score }}</td>
+      <td class="username">{{ entry.username }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p style="text-align:center; font-size: 1.2rem; color: #6b7280;">
+    No Pokémon have been ranked yet! Start ranking to see results here. ✨
+  </p>
+  {% endif %}
+
+  <div class="nav">
+    <a href="/pokeparty">⬅ Back to Home</a>
+  </div>
+</body>
+</html>

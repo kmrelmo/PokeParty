@@ -3,8 +3,8 @@ import requests
 import json
 import random
 
-from flask import Flask, jsonify, Response, render_template, request, session
-from models import Session, Pokemon
+from flask import Flask, jsonify, Response, render_template, request, session, redirect, url_for
+from models import Session, Pokemon, User, PokemonRank
 from pokemon_data import *
 
 # ----------------------------------------------------------------------------
@@ -17,9 +17,39 @@ app.secret_key = "super_secret_key"
 # ----------------------------------------------------------------------------
 # Routes
 # ----------------------------------------------------------------------------
+
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    db = Session()
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip().lower()
+        if not username:
+            return render_template('login.html', error="Please enter a username.")
+
+        # Check if user exists
+        user = db.query(User).filter_by(username=username).first()
+
+        # Create if not found
+        if not user:
+            user = User(username=username)
+            db.add(user)
+            db.commit()
+
+        # Store in session
+        session['username'] = username
+
+        return redirect(url_for('pokeparty_home'))  # Redirect to your main hub
+
+    return render_template('login.html', error=None)
+
+@app.route('/pokeparty')
+def pokeparty_home():
+    return render_template('pokeparty.html')
 
 @app.route('/pokemon/<name>')
 def get_pokemon(name):
@@ -55,6 +85,12 @@ def pokemon_ranker():
 
     return render_template('rank.html', pokemon_list=pokemon_list)
 
+
+
+
+
+
+
 @app.route('/game/statsguess')
 def pokemon_stats_guess():
     poke_id = get_random_pokemon_id()
@@ -88,6 +124,15 @@ def pokemon_dark_sprite_guess():
 @app.route('/game/higherlower', methods=["GET", "POST"])
 def pokemon_higher_lower():
     result = None
+    if "previous" not in session:
+            # fetch a random Pokémon for the left slot
+            poke_id2 = random.randint(1, 1025)
+            data2 = requests.get(f'https://pokeapi.co/api/v2/pokemon/{poke_id2}').json()
+            session["previous"] = (
+                data2["name"],
+                data2["sprites"]["front_default"],
+                extract_stats(data2),
+            )
 
     # Handle guess
     if request.method == "POST":
@@ -141,23 +186,25 @@ def pokemon_guess_from_id():
 
 @app.route('/game/rankrandom', methods=["GET", "POST"])
 def pokemon_rank_from_id():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     db = Session()
+    user = db.query(User).filter_by(username=session['username']).first()
 
     if request.method == "POST":
         name = request.form["name"]
         score = int(request.form["score"])
 
-        rank_entry = db.query(PokemonRank).filter_by(name=name).first()
+        rank_entry = db.query(PokemonRank).filter_by(name=name, user_id=user.id).first()
 
         if rank_entry:
-            # UPDATE existing
             old_score = rank_entry.score
             rank_entry.score = score
             db.commit()
             result = f"🔄 Updated ranking for {name.title()}: old {old_score}, new {score}"
         else:
-            # INSERT new
-            new_rank = PokemonRank(name=name, score=score)
+            new_rank = PokemonRank(name=name, score=score, user_id=user.id)
             db.add(new_rank)
             db.commit()
             result = f"⭐ New ranking saved for {name.title()}: {score}"
@@ -171,62 +218,94 @@ def pokemon_rank_from_id():
     name = data["name"]
     sprite_url = data["sprites"]["front_default"]
 
-    rank_entry = db.query(PokemonRank).filter_by(name=name).first()
+    rank_entry = db.query(PokemonRank).filter_by(name=name, user_id=user.id).first()
     rank = rank_entry.score if rank_entry else None
 
     return render_template("rankrandom.html", name=name, sprite_url=sprite_url, rank=rank, result=None)
 
+
 @app.route('/rankings')
 def show_all_rankings():
-    db = Session()
-    # grab all Pokémon sorted by ID
-    pokemon_list = db.query(Pokemon).order_by(Pokemon.id).all()
-    rank_map = {r.name: r.score for r in db.query(PokemonRank).all()}
+    if 'username' not in session:
+        return redirect(url_for('login'))
 
-    result = []
-    for p in pokemon_list:
-        result.append({
-            "id": p.id,
-            "name": p.name,
-            "sprite_url": p.sprite_url,
-            "score": rank_map.get(p.name)
-        })
+    db = Session()
+    user = db.query(User).filter_by(username=session['username']).first()
+
+    pokemon_list = db.query(Pokemon).order_by(Pokemon.id).all()
+    rank_map = {
+        r.name: r.score
+        for r in db.query(PokemonRank).filter_by(user_id=user.id).all()
+    }
+
+    result = [
+        {"id": p.id, "name": p.name, "sprite_url": p.sprite_url, "score": rank_map.get(p.name)}
+        for p in pokemon_list
+    ]
 
     return render_template("allrankings.html", pokemon_list=result)
 
+
 @app.route("/update_score", methods=["POST"])
 def update_score():
+    if 'username' not in session:
+        return {"success": False, "error": "User not logged in"}, 403
+
     db = Session()
     data = request.get_json()
     name = data["name"]
     score = int(data["score"])
 
-    rank_entry = db.query(PokemonRank).filter_by(name=name).first()
+    user = db.query(User).filter_by(username=session['username']).first()
+    if not user:
+        return {"success": False, "error": "User not found"}, 404
+
+    # find or create
+    rank_entry = db.query(PokemonRank).filter_by(name=name, user_id=user.id).first()
     if rank_entry:
         rank_entry.score = score
     else:
-        rank_entry = PokemonRank(name=name, score=score)
+        rank_entry = PokemonRank(name=name, score=score, user_id=user.id)
         db.add(rank_entry)
 
     db.commit()
     return {"success": True, "name": name, "score": score}
 
+
 @app.route('/leaderboard')
 def show_leaderboard():
     db = Session()
+
+    # Get only Pokémon that HAVE scores (join + order by)
     ranked = (
-        db.query(Pokemon, PokemonRank.score)
-        .join(PokemonRank, Pokemon.name == PokemonRank.name)
+        db.query(
+            User.username,
+            Pokemon.name,
+            Pokemon.sprite_url,
+            PokemonRank.score
+        )
+        .join(PokemonRank, User.id == PokemonRank.user_id)
+        .join(Pokemon, Pokemon.name == PokemonRank.name)
+        .filter(PokemonRank.score.isnot(None))
         .order_by(PokemonRank.score.desc())
+        .limit(100)
         .all()
     )
 
-    result = [
-        {"id": p.id, "name": p.name, "sprite_url": p.sprite_url, "score": score}
-        for p, score in ranked
+    # Convert to dicts for template
+    leaderboard = [
+        {
+            "username": u,
+            "pokemon": n,
+            "sprite_url": s,
+            "score": sc
+        }
+        for u, n, s, sc in ranked
     ]
 
-    return render_template("allrankings.html", pokemon_list=result)
+    return render_template("leaderboard.html", leaderboard=leaderboard)
+
+
 
 # ----------------------------------------------------------------------------
 # Main

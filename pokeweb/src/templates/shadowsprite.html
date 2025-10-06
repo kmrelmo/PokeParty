@@ -63,7 +63,7 @@
 
     <div id="actions">
         <button onclick="location.href='/game/shadowsprite'">Play Again (r)</button>
-        <button onclick="location.href='/'">Back to Home (e)</button>
+        <button onclick="location.href='/pokeparty'">Back to Home (e)</button>
     </div>
 
     <script>
@@ -101,7 +101,7 @@
             }
             if ((key === "r" || key === "e") && document.getElementById("guessInput").disabled) {
                 if (key === "r") location.href = "/game/shadowsprite";
-                if (key === "e") location.href = "/";
+                if (key === "e") location.href = "/pokeparty";
             }
         });
     </script>
