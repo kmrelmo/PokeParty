@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import Column, Integer, String, Text, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -24,7 +25,13 @@ class PokemonRank(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User')
 
-# Database setup
-engine = create_engine('sqlite:///db.sqlite')
+# 🔧 Path setup
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "db.sqlite")
+
+# ✅ Force the full path inside the container (important for Docker)
+engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
+

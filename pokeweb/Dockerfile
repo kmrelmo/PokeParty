@@ -1,6 +1,26 @@
 # Use a lightweight Python base
 FROM python:3.11-slim
 
+WORKDIR /app
+
+# Install SQLite (important)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sqlite3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy your source files
+COPY src/ .
+
+EXPOSE 5000
+
+CMD ["python", "src/app.py"]
+# Use a lightweight Python base
+FROM python:3.11-slim
+
 # Set working directory inside the container
 WORKDIR /app
 
