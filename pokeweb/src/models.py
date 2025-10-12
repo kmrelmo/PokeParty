@@ -25,6 +25,12 @@ class PokemonRank(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User')
 
+class TypeInfo(Base):
+    __tablename__ = 'type_info'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    data = Column(Text)  # JSON blob with keys: weak_to, strong_against, resist_from, immune_from, resist_to, immune_to
+
 # 🔧 Path setup
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db.sqlite")

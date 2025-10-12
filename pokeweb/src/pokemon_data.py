@@ -1,8 +1,15 @@
 # utils.py
 import json
-from models import Session, Pokemon, PokemonRank
+from models import Session, Pokemon, PokemonRank, TypeInfo
 import requests
 import random
+
+# Canonical list of standard Pokemon types (Gen 6+)
+TYPE_NAMES = [
+    "normal", "fire", "water", "electric", "grass", "ice",
+    "fighting", "poison", "ground", "flying", "psychic", "bug",
+    "rock", "ghost", "dragon", "dark", "steel", "fairy",
+]
 
 def extract_sprite(pokemon_data):
     return pokemon_data['sprites']['front_default']
@@ -47,6 +54,36 @@ def fetch_species(url):
     if response.status_code == 200:
         return response.json()
     return {}
+
+def get_type_matchups(type_name):
+    """Return key type matchups for a given type from local DB only.
+
+    Output keys:
+      - weak_to:        set of types this type takes 2x from
+      - strong_against: set of types this type deals 2x to
+      - resist_from:    set of types this type takes 0.5x from
+      - immune_from:    set of types this type takes 0x from
+      - resist_to:      set of types this type deals 0.5x to
+      - immune_to:      set of types this type deals 0x to
+    """
+    db = Session()
+    name = (type_name or '').lower()
+    row = db.query(TypeInfo).filter_by(name=name).first()
+    if not row:
+        return {k: set() for k in [
+            "weak_to", "strong_against", "resist_from", "immune_from", "resist_to", "immune_to"
+        ]}
+    payload = json.loads(row.data)
+    def to_set(key):
+        return set(payload.get(key, []) or [])
+    return {
+        "weak_to": to_set("weak_to"),
+        "strong_against": to_set("strong_against"),
+        "resist_from": to_set("resist_from"),
+        "immune_from": to_set("immune_from"),
+        "resist_to": to_set("resist_to"),
+        "immune_to": to_set("immune_to"),
+    }
 
 def get_or_cache_pokemon(name):
     """Return Pokémon data from DB if cached, otherwise fetch + store it."""

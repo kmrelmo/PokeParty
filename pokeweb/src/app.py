@@ -184,6 +184,62 @@ def pokemon_guess_from_id():
     sprite_url = data["sprites"]["front_default"]
     return render_template('guessfromid.html',name=name, id=poke_id,sprite_url=sprite_url)
 
+@app.route('/game/typematch', methods=["GET", "POST"])
+def type_match_game():
+    # Game: show a random type. Player selects all weaknesses (2x from),
+    # resistances (0.5x from), immunities (0x from), and strengths (2x to).
+
+    all_types = TYPE_NAMES
+
+    if request.method == "POST":
+        type_name = request.form.get("type_name", "").lower()
+        picked_weak = set(request.form.getlist("weaknesses"))
+        picked_resist = set(request.form.getlist("resist_from"))
+        picked_immune = set(request.form.getlist("immune_from"))
+        picked_strong = set(request.form.getlist("strengths"))
+
+        matchups = get_type_matchups(type_name)
+        correct_weak = set(matchups.get("weak_to", set()))
+        correct_resist = set(matchups.get("resist_from", set()))
+        correct_immune = set(matchups.get("immune_from", set()))
+        correct_strong = set(matchups.get("strong_against", set()))
+
+        result = {
+            "type": type_name,
+            "picked_weak": sorted(picked_weak),
+            "picked_resist": sorted(picked_resist),
+            "picked_immune": sorted(picked_immune),
+            "picked_strong": sorted(picked_strong),
+            "correct_weak": sorted(correct_weak),
+            "correct_resist": sorted(correct_resist),
+            "correct_immune": sorted(correct_immune),
+            "correct_strong": sorted(correct_strong),
+            "weak_missed": sorted(correct_weak - picked_weak),
+            "weak_extra": sorted(picked_weak - correct_weak),
+            "resist_missed": sorted(correct_resist - picked_resist),
+            "resist_extra": sorted(picked_resist - correct_resist),
+            "immune_missed": sorted(correct_immune - picked_immune),
+            "immune_extra": sorted(picked_immune - correct_immune),
+            "strong_missed": sorted(correct_strong - picked_strong),
+            "strong_extra": sorted(picked_strong - correct_strong),
+        }
+
+        return render_template(
+            'typematch.html',
+            mode='result',
+            all_types=all_types,
+            result=result,
+        )
+
+    # GET: present a random type and blank form
+    type_name = random.choice(TYPE_NAMES)
+    return render_template(
+        'typematch.html',
+        mode='play',
+        type_name=type_name,
+        all_types=all_types,
+    )
+
 @app.route('/game/rankrandom', methods=["GET", "POST"])
 def pokemon_rank_from_id():
     if 'username' not in session:

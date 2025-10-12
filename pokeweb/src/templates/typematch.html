@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Type Match</title>
+  <style>
+    body { font-family: Inter, system-ui, Arial; background: #f6f7fb; color:#1f2937; padding: 24px; }
+    .card { background:#fff; border-radius:14px; padding:20px; max-width:900px; margin:0 auto 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+    h1 { margin: 0 0 8px 0; font-size: 1.8rem; }
+    h2 { margin: 6px 0 14px 0; font-size: 1.2rem; color:#374151; }
+    .row { display:flex; gap:18px; flex-wrap:wrap; }
+    .col { flex:1 1 420px; min-width:320px; }
+    .types { display:grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap:8px 10px; }
+    label { display:flex; align-items:center; gap:8px; font-size: 0.95rem; }
+    input[type="checkbox"] { width:18px; height:18px; accent-color:#f97316; }
+    .actions { margin-top:16px; display:flex; gap:12px; }
+    button { background:linear-gradient(90deg,#f97316,#facc15); color:#fff; border:none; border-radius:10px; padding:10px 16px; font-weight:600; cursor:pointer; }
+    a.btn { display:inline-block; text-decoration:none; background:#e5e7eb; color:#111827; padding:10px 14px; border-radius:10px; font-weight:600; }
+    .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; margin:2px 4px 0 0; font-size:0.9rem; }
+    .bad { background:#fee2e2; color:#991b1b; }
+    .good { background:#dcfce7; color:#14532d; }
+    .section { margin-top:10px; }
+    .muted { color:#6b7280; }
+  </style>
+  <script>
+    function toggleAll(name, checked) {
+      document.querySelectorAll('input[name="'+name+'"]')
+        .forEach(cb => cb.checked = checked);
+    }
+  </script>
+  </head>
+<body>
+  <div class="card">
+    <h1>Type Match</h1>
+    <p class="muted">Pick all type weaknesses and strengths for the shown type.</p>
+  </div>
+
+  {% if mode == 'play' %}
+  <div class="card">
+    <h2>Target Type: <strong>{{ type_name|title }}</strong></h2>
+    <form method="post">
+      <input type="hidden" name="type_name" value="{{ type_name }}" />
+      <div class="row">
+        <div class="col">
+          <h3>Weak To (takes 2x from)</h3>
+          <div class="types">
+            {% for t in all_types %}
+            <label><input type="checkbox" name="weaknesses" value="{{ t }}" /> {{ t|title }}</label>
+            {% endfor %}
+          </div>
+          <div class="actions">
+            <a class="btn" href="#" onclick="toggleAll('weaknesses', false);return false;">Clear</a>
+          </div>
+        </div>
+        <div class="col">
+          <h3>Resist From (takes 0.5x from)</h3>
+          <div class="types">
+            {% for t in all_types %}
+            <label><input type="checkbox" name="resist_from" value="{{ t }}" /> {{ t|title }}</label>
+            {% endfor %}
+          </div>
+          <div class="actions">
+            <a class="btn" href="#" onclick="toggleAll('resist_from', false);return false;">Clear</a>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h3>Immune From (takes 0x from)</h3>
+          <div class="types">
+            {% for t in all_types %}
+            <label><input type="checkbox" name="immune_from" value="{{ t }}" /> {{ t|title }}</label>
+            {% endfor %}
+          </div>
+          <div class="actions">
+            <a class="btn" href="#" onclick="toggleAll('immune_from', false);return false;">Clear</a>
+          </div>
+        </div>
+        <div class="col">
+          <h3>Strong Against (deals 2x to)</h3>
+          <div class="types">
+            {% for t in all_types %}
+            <label><input type="checkbox" name="strengths" value="{{ t }}" /> {{ t|title }}</label>
+            {% endfor %}
+          </div>
+          <div class="actions">
+            <a class="btn" href="#" onclick="toggleAll('strengths', false);return false;">Clear</a>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit">Check Answers</button>
+        <a class="btn" href="/pokeparty">Back</a>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if mode == 'result' %}
+  <div class="card">
+    <h2>Results for <strong>{{ result.type|title }}</strong></h2>
+    <div class="row">
+      <div class="col">
+        <h3>Your Weaknesses</h3>
+        <div class="section">
+          {% if result.picked_weak %}
+            {% for t in result.picked_weak %}<span class="pill">{{ t|title }}</span>{% endfor %}
+          {% else %}<span class="muted">None selected</span>{% endif %}
+        </div>
+        <div class="section">
+          <strong>Correct Weaknesses:</strong>
+          {% for t in result.correct_weak %}<span class="pill good">{{ t|title }}</span>{% endfor %}
+        </div>
+        <div class="section">
+          {% if result.weak_missed %}
+            <strong>Missed:</strong>
+            {% for t in result.weak_missed %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+          {% if result.weak_extra %}
+            <strong>Not Weak To:</strong>
+            {% for t in result.weak_extra %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="col">
+        <h3>Your Resistances</h3>
+        <div class="section">
+          {% if result.picked_resist %}
+            {% for t in result.picked_resist %}<span class="pill">{{ t|title }}</span>{% endfor %}
+          {% else %}<span class="muted">None selected</span>{% endif %}
+        </div>
+        <div class="section">
+          <strong>Correct Resistances (0.5x):</strong>
+          {% for t in result.correct_resist %}<span class="pill good">{{ t|title }}</span>{% endfor %}
+        </div>
+        <div class="section">
+          {% if result.resist_missed %}
+            <strong>Missed:</strong>
+            {% for t in result.resist_missed %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+          {% if result.resist_extra %}
+            <strong>Not Resistant From:</strong>
+            {% for t in result.resist_extra %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <h3>Your Immunities</h3>
+        <div class="section">
+          {% if result.picked_immune %}
+            {% for t in result.picked_immune %}<span class="pill">{{ t|title }}</span>{% endfor %}
+          {% else %}<span class="muted">None selected</span>{% endif %}
+        </div>
+        <div class="section">
+          <strong>Correct Immunities (0x):</strong>
+          {% for t in result.correct_immune %}<span class="pill good">{{ t|title }}</span>{% endfor %}
+        </div>
+        <div class="section">
+          {% if result.immune_missed %}
+            <strong>Missed:</strong>
+            {% for t in result.immune_missed %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+          {% if result.immune_extra %}
+            <strong>Not Immune From:</strong>
+            {% for t in result.immune_extra %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="col">
+        <h3>Your Strengths</h3>
+        <div class="section">
+          {% if result.picked_strong %}
+            {% for t in result.picked_strong %}<span class="pill">{{ t|title }}</span>{% endfor %}
+          {% else %}<span class="muted">None selected</span>{% endif %}
+        </div>
+        <div class="section">
+          <strong>Correct Strengths:</strong>
+          {% for t in result.correct_strong %}<span class="pill good">{{ t|title }}</span>{% endfor %}
+        </div>
+        <div class="section">
+          {% if result.strong_missed %}
+            <strong>Missed:</strong>
+            {% for t in result.strong_missed %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+          {% if result.strong_extra %}
+            <strong>Not Strong Against:</strong>
+            {% for t in result.strong_extra %}<span class="pill bad">{{ t|title }}</span>{% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:16px;">
+      <a class="btn" href="/game/typematch">Play Again</a>
+      <a class="btn" href="/pokeparty">Back</a>
+    </div>
+  </div>
+  {% endif %}
+  
+</body>
+</html>

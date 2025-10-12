@@ -1,5 +1,6 @@
-import json, requests
-from models import Session, Pokemon
+import json, requests, sys
+from models import Session, Pokemon, TypeInfo
+from pokemon_data import TYPE_NAMES
 
 def seed_pokemon_db():
     db = Session()
@@ -33,5 +34,45 @@ def seed_pokemon_db():
     print("🎉 Seeding complete!")
     
 
+def seed_type_data():
+    db = Session()
+    def names(arr):
+        return [t.get('name') for t in (arr or [])]
+
+    for tname in TYPE_NAMES:
+        url = f"https://pokeapi.co/api/v2/type/{tname}"
+        resp = requests.get(url)
+        if resp.status_code != 200:
+            print(f"Failed to fetch type {tname}: {resp.status_code}")
+            continue
+        data = resp.json()
+        rel = data.get('damage_relations', {})
+        payload = {
+            'weak_to': names(rel.get('double_damage_from')),
+            'strong_against': names(rel.get('double_damage_to')),
+            'resist_from': names(rel.get('half_damage_from')),
+            'immune_from': names(rel.get('no_damage_from')),
+            'resist_to': names(rel.get('half_damage_to')),
+            'immune_to': names(rel.get('no_damage_to')),
+        }
+        row = db.query(TypeInfo).filter_by(name=tname).first()
+        if row:
+            row.data = json.dumps(payload)
+        else:
+            row = TypeInfo(name=tname, data=json.dumps(payload))
+            db.add(row)
+        db.commit()
+        print(f"Seeded type {tname}")
+    db.close()
+
 if __name__ == "__main__":
-    seed_pokemon_db()
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1].lower()
+        if cmd == 'pokemon':
+            seed_pokemon_db()
+        elif cmd == 'types':
+            seed_type_data()
+        else:
+            print("Unknown command. Use 'pokemon' or 'types'.")
+    else:
+        print("Specify what to seed: 'pokemon' or 'types'.")
